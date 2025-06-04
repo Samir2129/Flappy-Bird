@@ -11,7 +11,8 @@ let bird = {
   height: 40,
   gravity: 0.6,
   lift: -10,
-  velocity: 0
+  velocity: 0,
+  rotation: 0
 };
 
 let pipes = [];
@@ -23,6 +24,7 @@ let gameOver = false;
 function resetGame() {
   bird.y = 150;
   bird.velocity = 0;
+  bird.rotation = 0;
   pipes = [];
   score = 0;
   frame = 0;
@@ -31,7 +33,11 @@ function resetGame() {
 }
 
 function drawBird() {
-  ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+  ctx.save();
+  ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
+  ctx.rotate(bird.rotation);
+  ctx.drawImage(birdImg, -bird.width / 2, -bird.height / 2, bird.width, bird.height);
+  ctx.restore();
 }
 
 function createPipe() {
@@ -58,12 +64,14 @@ function update() {
   bird.velocity += bird.gravity;
   bird.y += bird.velocity;
 
+  // Rotate based on velocity
+  bird.rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, bird.velocity / 10));
+
   if (frame % 100 === 0) createPipe();
 
   pipes.forEach(pipe => {
     pipe.x -= 2;
 
-    // Collision
     if (
       bird.x < pipe.x + pipe.width &&
       bird.x + bird.width > pipe.x &&
@@ -72,14 +80,12 @@ function update() {
       gameOver = true;
     }
 
-    // Score
     if (!pipe.passed && pipe.x + pipe.width < bird.x) {
       score++;
       pipe.passed = true;
     }
   });
 
-  // Ground/ceiling collision
   if (bird.y + bird.height > canvas.height || bird.y < 0) {
     gameOver = true;
   }
@@ -125,7 +131,6 @@ function gameLoop() {
   }
 }
 
-// Controls
 document.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
     if (gameOver) {
