@@ -2,7 +2,7 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 let birdImg = new Image();
-birdImg.src = "images/bird.png"; // Make sure this path is correct
+birdImg.src = "images/bird.png";
 
 let bird = {
   x: 80,
@@ -17,7 +17,18 @@ let bird = {
 let pipes = [];
 let frame = 0;
 let score = 0;
+let bestScore = localStorage.getItem("bestScore") || 0;
 let gameOver = false;
+
+function resetGame() {
+  bird.y = 150;
+  bird.velocity = 0;
+  pipes = [];
+  score = 0;
+  frame = 0;
+  gameOver = false;
+  gameLoop();
+}
 
 function drawBird() {
   ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
@@ -30,7 +41,8 @@ function createPipe() {
     x: canvas.width,
     top: topHeight,
     bottom: topHeight + gap,
-    width: 50
+    width: 50,
+    passed: false
   });
 }
 
@@ -72,14 +84,22 @@ function update() {
     gameOver = true;
   }
 
-  // Remove off-screen pipes
   pipes = pipes.filter(pipe => pipe.x + pipe.width > 0);
 }
 
 function drawScore() {
   ctx.fillStyle = "#000";
-  ctx.font = "24px sans-serif";
+  ctx.font = "20px sans-serif";
   ctx.fillText(`Score: ${score}`, 10, 30);
+  ctx.fillText(`Best: ${bestScore}`, 10, 60);
+}
+
+function drawGameOver() {
+  ctx.fillStyle = "#000";
+  ctx.font = "36px sans-serif";
+  ctx.fillText("Game Over", 110, 270);
+  ctx.font = "20px sans-serif";
+  ctx.fillText("Press Space to Restart", 90, 310);
 }
 
 function draw() {
@@ -87,6 +107,7 @@ function draw() {
   drawBird();
   drawPipes();
   drawScore();
+  if (gameOver) drawGameOver();
 }
 
 function gameLoop() {
@@ -96,14 +117,23 @@ function gameLoop() {
     frame++;
     requestAnimationFrame(gameLoop);
   } else {
-    ctx.fillStyle = "#000";
-    ctx.font = "36px sans-serif";
-    ctx.fillText("Game Over", 120, 300);
+    if (score > bestScore) {
+      bestScore = score;
+      localStorage.setItem("bestScore", bestScore);
+    }
+    draw();
   }
 }
 
-document.addEventListener("keydown", () => {
-  bird.velocity = bird.lift;
+// Controls
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space") {
+    if (gameOver) {
+      resetGame();
+    } else {
+      bird.velocity = bird.lift;
+    }
+  }
 });
 
 birdImg.onload = () => {
