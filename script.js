@@ -131,15 +131,17 @@ function gameLoop() {
   }
 }
 
-document.addEventListener("keydown", (e) => {
-  if (e.code === "Space") {
-    if (gameOver) {
-      resetGame();
-    } else {
-      bird.velocity = bird.lift;
-    }
+function handleTap() {
+  if (gameOver) {
+    resetGame();
+  } else {
+    bird.velocity = bird.lift;
   }
-});
+}
+
+canvas.addEventListener("click", handleTap);
+canvas.addEventListener("touchstart", handleTap);
+
 
 birdImg.onload = () => {
   gameLoop();
